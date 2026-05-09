@@ -140,6 +140,66 @@ tr:nth-child(even) td { background: var(--surface2); }
 .wm { text-align: center; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--border); padding: 16px; }
 .disclaimer { text-align: center; font-size: 10.5px; color: var(--muted); padding: 14px 40px 4px; border-top: 1px solid var(--border); margin-top: 28px; }
 
+/* ── FLOATING WATERMARK ── */
+.cb-watermark {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.92);
+  border: 1.5px solid var(--border);
+  border-radius: 30px;
+  padding: 7px 14px 7px 8px;
+  box-shadow: 0 4px 20px rgba(24,21,17,0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: default;
+  transition: box-shadow 0.2s;
+}
+.cb-watermark:hover { box-shadow: 0 6px 28px rgba(24,21,17,0.18); }
+.cb-wm-logo {
+  width: 28px;
+  height: 28px;
+  background: #c8420f;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.85rem;
+  font-weight: 900;
+  color: #fff;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+.cb-wm-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.cb-wm-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+.cb-wm-sub {
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+@media (max-width: 600px) {
+  .cb-watermark { bottom: 12px; right: 12px; padding: 5px 10px 5px 6px; }
+  .cb-wm-logo { width: 24px; height: 24px; font-size: 0.75rem; }
+  .cb-wm-name { font-size: 10px; }
+  .cb-wm-sub { display: none; }
+}
+
 @media (max-width: 860px) {
   .main { padding: 14px 16px 40px; }
   .top-header { padding: 0 16px; flex-wrap: wrap; }
@@ -867,6 +927,15 @@ tr:nth-child(even) td { background: var(--surface2); }
   All BSE Q4 FY26 figures are audited actuals declared 7 May 2026 · MCX Q3 FY26 are audited actuals · MCX Q4 FY26 results due 10 May 2026 · Q4 and FY26 MCX figures are estimates · Data from BSE/NSE exchange filings and investor presentations · For informational and research purposes only
 </div>
 <div class="wm">EIL Research · Elango Industries Limited · 08 May 2026</div>
+
+<!-- FLOATING CAUVERY BUSINESS WATERMARK -->
+<div class="cb-watermark">
+  <div class="cb-wm-logo">CB</div>
+  <div class="cb-wm-text">
+    <span class="cb-wm-name">Cauvery Business</span>
+    <span class="cb-wm-sub">Research Dashboard</span>
+  </div>
+</div>
 
 <script>
 function showTab(id, btn) {

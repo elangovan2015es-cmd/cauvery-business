@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSE & MCX — Exchange Intelligence Dashboard | Q4 FY26</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg: #f7f6f2;
+  --surface: #ffffff;
+  --surface2: #f2f0eb;
+  --border: #e2ddd5;
+  --text: #181511;
+  --muted: #6e6860;
+  --bse: #bf3a0a;
+  --bse-soft: #fbeee8;
+  --bse-mid: #e8855a;
+  --mcx: #0f6640;
+  --mcx-soft: #e5f3ec;
+  --mcx-mid: #5aad7e;
+  --gold: #b8911e;
+  --gold-soft: #fdf5e0;
+  --pos: #0f6640;
+  --neg: #bf3a0a;
+  --shadow: 0 1px 8px rgba(24,21,17,0.07);
+  --shadow-md: 0 4px 20px rgba(24,21,17,0.10);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 13.5px; line-height: 1.55; }
+
+.top-header { background: #181511; color: #fff; padding: 0 40px; display: flex; align-items: stretch; justify-content: space-between; gap: 0; min-height: 70px; }
+.top-header-left { display: flex; align-items: center; padding: 16px 0; }
+.top-header-left h1 { font-family: 'Playfair Display', serif; font-size: 1.55rem; letter-spacing: -0.01em; color: #fff; line-height: 1.15; }
+.top-header-left .sub { font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.45); letter-spacing: 0.12em; text-transform: uppercase; margin-top: 4px; }
+.top-header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px 0; }
+.chip { padding: 4px 12px; border-radius: 20px; font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.chip-bse { background: var(--bse); color: #fff; }
+.chip-mcx { background: var(--mcx); color: #fff; }
+.chip-date { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.12); }
+.chip-warn { background: var(--gold); color: #181511; }
+
+.tab-nav { background: var(--surface); border-bottom: 2px solid var(--border); display: flex; align-items: center; padding: 0 40px; gap: 0; overflow-x: auto; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(24,21,17,0.06); }
+.tab-nav::-webkit-scrollbar { height: 0; }
+.tab-btn { padding: 14px 18px 12px; font-size: 12px; font-weight: 600; color: var(--muted); background: none; border: none; border-bottom: 3px solid transparent; cursor: pointer; white-space: nowrap; letter-spacing: 0.02em; transition: color 0.18s, border-color 0.18s; margin-bottom: -2px; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--text); border-bottom-color: var(--bse); font-weight: 700; }
+
+.main { padding: 28px 40px 48px; max-width: 1380px; margin: 0 auto; }
+.panel { display: none; animation: fadeIn 0.22s ease; }
+.panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.sec-heading { display: flex; align-items: baseline; gap: 14px; margin-bottom: 22px; padding-bottom: 12px; border-bottom: 2px solid var(--border); }
+.sec-heading h2 { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+.sec-heading .sec-note { font-size: 11px; color: var(--muted); font-weight: 500; }
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; }
+.gap-top { margin-top: 22px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; box-shadow: var(--shadow); }
+.card-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 14px; }
+
+.company-banner { border-radius: 14px; padding: 22px 24px; border: 1.5px solid; box-shadow: var(--shadow-md); }
+.banner-bse { border-color: var(--bse); background: #fff; }
+.banner-mcx { border-color: var(--mcx); background: #fff; }
+.co-badge { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+.co-badge-bse { background: var(--bse); color: #fff; }
+.co-badge-mcx { background: var(--mcx); color: #fff; }
+.company-banner h2 { font-family: 'Playfair Display', serif; font-size: 1.35rem; margin-bottom: 3px; }
+.company-banner .tagline { font-size: 11.5px; color: var(--muted); margin-bottom: 14px; }
+.co-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+.co-meta span { font-size: 11.5px; color: var(--muted); }
+.co-meta strong { color: var(--text); }
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.metric-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+.mb-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.mb-val { font-size: 1.05rem; font-weight: 800; color: var(--text); line-height: 1.2; margin: 3px 0 2px; }
+.mb-chg { font-size: 10px; font-weight: 700; }
+.pos { color: var(--pos); } .neg { color: var(--neg); } .neu { color: var(--muted); }
+
+.kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); }
+.kpi.bse-accent { border-left: 4px solid var(--bse); }
+.kpi.mcx-accent { border-left: 4px solid var(--mcx); }
+.kpi .kl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); margin-bottom: 5px; }
+.kpi .kv { font-size: 1.25rem; font-weight: 800; color: var(--text); }
+.kpi .kc { font-size: 10.5px; font-weight: 700; margin-top: 2px; }
+
+svg.chart { display: block; width: 100%; }
+.cl { font-family: 'Inter', sans-serif; font-size: 10.5px; fill: var(--muted); }
+.cv { font-family: 'IBM Plex Mono', monospace; font-size: 10px; fill: #181511; }
+.ct { font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 700; fill: #181511; }
+
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); padding: 9px 11px; border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { padding: 9px 11px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:nth-child(even) td { background: var(--surface2); }
+.tn { font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: right; }
+.tb { font-weight: 700; }
+.tpos { color: var(--pos); font-weight: 700; }
+.tneg { color: var(--neg); font-weight: 700; }
+
+.seg-bar-wrap { margin: 14px 0 4px; }
+.seg-bar { height: 24px; border-radius: 8px; overflow: hidden; display: flex; }
+.seg-bar div { display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; color: #fff; }
+.seg-label-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.seg-dot { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; color: var(--muted); }
+.seg-dot span { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+
+.usp-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.usp-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.usp-num { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--border); line-height: 1; margin-bottom: 8px; }
+.usp-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+.usp-body { font-size: 11px; color: var(--muted); line-height: 1.55; }
+.usp-tag { display: inline-block; margin-top: 8px; padding: 2px 9px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+.utag-bse { background: var(--bse-soft); color: var(--bse); }
+.utag-mcx { background: var(--mcx-soft); color: var(--mcx); }
+.utag-both { background: var(--gold-soft); color: var(--gold); }
+
+.why-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.why-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+.why-num { font-family: 'Playfair Display', serif; font-size: 1.8rem; line-height: 1; color: var(--border); margin-bottom: 8px; }
+.why-title { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+.why-body { font-size: 11px; color: var(--muted); line-height: 1.55; }
+
+.pill-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+
+.score-bse-hdr { background: var(--bse); color: #fff; text-align: center; padding: 8px 11px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.score-mcx-hdr { background: var(--mcx); color: #fff; text-align: center; padding: 8px 11px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+.edge-bse { color: var(--bse); font-weight: 800; text-align: center; }
+.edge-mcx { color: var(--mcx); font-weight: 800; text-align: center; }
+.edge-tie { color: var(--muted); text-align: center; }
+
+.wm { text-align: center; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--border); padding: 16px; }
+.disclaimer { text-align: center; font-size: 10.5px; color: var(--muted); padding: 14px 40px 4px; border-top: 1px solid var(--border); margin-top: 28px; }
+
+@media (max-width: 860px) {
+  .main { padding: 14px 16px 40px; }
+  .top-header { padding: 0 16px; flex-wrap: wrap; }
+  .tab-nav { padding: 0 8px; }
+  .g2,.g3,.g4,.kpi-row,.metric-grid,.usp-grid,.why-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="top-header">
+  <div class="top-header-left">
+    <div>
+      <h1>BSE &amp; MCX Exchange Dashboard</h1>
+      <div class="sub">Integrated Business &amp; Financial Intelligence · Q4 FY26</div>
+    </div>
+  </div>
+  <div class="top-header-right">
+    <span class="chip chip-bse">BSE · Q4 FY26 Actual</span>
+    <span class="chip chip-mcx">MCX · Q3 FY26 Actual</span>
+    <span class="chip chip-warn">⚠ MCX Q4 due 10 May 2026</span>
+    <span class="chip chip-date">08 May 2026 · 09:15 IST</span>
+  </div>
+</div>
+
+<nav class="tab-nav">
+  <button class="tab-btn active"  onclick="showTab('snapshot',this)">Company Snapshot</button>
+  <button class="tab-btn" onclick="showTab('quarterly',this)">Quarterly Results</button>
+  <button class="tab-btn" onclick="showTab('netprofit',this)">Net Profit</button>
+  <button class="tab-btn" onclick="showTab('segments',this)">Revenue Segments</button>
+  <button class="tab-btn" onclick="showTab('charts',this)">Charts</button>
+  <button class="tab-btn" onclick="showTab('annual',this)">Annual Performance</button>
+  <button class="tab-btn" onclick="showTab('usps',this)">USPs &amp; Moats</button>
+  <button class="tab-btn" onclick="showTab('whygood',this)">Why Good Performance?</button>
+  <button class="tab-btn" onclick="showTab('scorecard',this)">Scorecard</button>
+</nav>
+
+<div class="main">
+
+<!-- ══════════════════════ TAB 1 · COMPANY SNAPSHOT ══════════════════════ -->
+<div class="panel active" id="tab-snapshot">
+  <div class="sec-heading">
+    <h2>Company Snapshot</h2>
+    <span class="sec-note">At-a-glance overview of both exchanges</span>
+  </div>
+  <div class="g2">
+    <div class="company-banner banner-bse">
+      <span class="co-badge co-badge-bse">BSE Limited · NSE: BSE</span>
+      <h2>Bombay Stock Exchange</h2>
+      <div class="tagline">Asia's oldest exchange (est. 1875) — equities, derivatives, mutual fund distribution, SME platform, clearing &amp; settlement</div>
+      <div class="co-meta">
+        <span>CMP <strong>₹3,963</strong></span>
+        <span>Mkt Cap <strong>₹1,61,437 Cr</strong></span>
+        <span>P/E <strong>~65x</strong></span>
+        <span>Registered Investors <strong>24.8 Cr</strong></span>
+        <span class="pos" style="font-weight:700;">+50% YTD</span>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-box"><div class="mb-label">Q4 Revenue</div><div class="mb-val">₹1,564 Cr</div><div class="mb-chg pos">▲ 85% YoY</div></div>
+        <div class="metric-box"><div class="mb-label">Q4 Net Profit</div><div class="mb-val">₹797 Cr</div><div class="mb-chg pos">▲ 61% YoY</div></div>
+        <div class="metric-box"><div class="mb-label">FY26 Annual PAT</div><div class="mb-val">₹2,487 Cr</div><div class="mb-chg pos">▲ 88% YoY</div></div>
+        <div class="metric-box"><div class="mb-label">FY26 Revenue</div><div class="mb-val">₹5,148 Cr</div><div class="mb-chg pos">Strong growth</div></div>
+        <div class="metric-box"><div class="mb-label">EBITDA Margin</div><div class="mb-val">48%</div><div class="mb-chg neu">FY26 full year</div></div>
+        <div class="metric-box"><div class="mb-label">Final Dividend</div><div class="mb-val">₹10/sh</div><div class="mb-chg neu">500% on FV ₹2</div></div>
+      </div>
+      <div class="pill-row">
+        <span class="pill">Asia's oldest exchange · 1875</span>
+        <span class="pill">5,000+ listed companies</span>
+        <span class="pill">StAR MF superplatform</span>
+        <span class="pill">Zero debt</span>
+        <span class="pill">SME platform leader</span>
+        <span class="pill">Social Stock Exchange</span>
+      </div>
+    </div>
+    <div class="company-banner banner-mcx">
+      <span class="co-badge co-badge-mcx">MCX India · NSE: MCX</span>
+      <h2>Multi Commodity Exchange</h2>
+      <div class="tagline">India's dominant commodity derivatives exchange — bullion, base metals, energy, agri (est. 2003). World's 6th largest by commodity contracts</div>
+      <div class="co-meta">
+        <span>CMP <strong>₹2,994</strong></span>
+        <span>Mkt Cap <strong>~₹15,250 Cr</strong></span>
+        <span>P/E <strong>~80x</strong></span>
+        <span>Market Share <strong>95%+ commodities</strong></span>
+        <span class="pos" style="font-weight:700;">+147% in 1 yr</span>
+      </div>
+      <div class="metric-grid">
+        <div class="metric-box"><div class="mb-label">Q3 Revenue (Latest)</div><div class="mb-val">₹666 Cr</div><div class="mb-chg pos">▲ 121% YoY</div></div>
+        <div class="metric-box"><div class="mb-label">Q3 Net Profit</div><div class="mb-val">₹401 Cr</div><div class="mb-chg pos">▲ 151% YoY</div></div>
+        <div class="metric-box"><div class="mb-label">9M FY26 PAT</div><div class="mb-val">₹802 Cr</div><div class="mb-chg pos">▲ 89% YoY</div></div>
+        <div class="metric-box"><div class="mb-label">Q4 PAT (Estimate)</div><div class="mb-val">~₹88–118 Cr</div><div class="mb-chg neu">Due 10 May 2026</div></div>
+        <div class="metric-box"><div class="mb-label">EBITDA Margin</div><div class="mb-val">76%</div><div class="mb-chg pos">Q3 FY26</div></div>
+        <div class="metric-box"><div class="mb-label">ADT F&amp;O</div><div class="mb-val">₹7.5L Cr</div><div class="mb-chg pos">▲ 224% YoY Q3</div></div>
+      </div>
+      <div class="pill-row">
+        <span class="pill">95%+ commodity share</span>
+        <span class="pill">Gold &amp; Silver dominant</span>
+        <span class="pill">Coal Exchange approved</span>
+        <span class="pill">BULLDEX index options</span>
+        <span class="pill">CME / LME alliances</span>
+        <span class="pill">Operating leverage champion</span>
+      </div>
+    </div>
+  </div>
+  <div class="gap-top">
+    <div class="kpi-row">
+      <div class="kpi bse-accent"><div class="kl">BSE Q4 Revenue Growth</div><div class="kv">+85% YoY</div><div class="kc pos">₹1,564 Cr vs ₹847 Cr PY</div></div>
+      <div class="kpi bse-accent"><div class="kl">BSE FY26 Operating Cash Flow</div><div class="kv">₹3,104 Cr</div><div class="kc pos">▲ 657% YoY</div></div>
+      <div class="kpi mcx-accent"><div class="kl">MCX Q3 EBITDA Margin</div><div class="kv">76%</div><div class="kc pos">vs 67% in Q3 FY25</div></div>
+      <div class="kpi mcx-accent"><div class="kl">MCX ADT Growth Q3</div><div class="kv">+224% YoY</div><div class="kc pos">₹7.5 lakh Cr avg daily</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 2 · QUARTERLY RESULTS ══════════════════════ -->
+<div class="panel" id="tab-quarterly">
+  <div class="sec-heading">
+    <h2>Quarterly Results</h2>
+    <span class="sec-note">BSE Q4 FY26 Actual · MCX Q3 FY26 Actual (Q4 est. due 10 May)</span>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-label" style="color:var(--bse);">BSE Limited — Quarterly Financial Summary (₹ Crore)</div>
+    <table>
+      <thead>
+        <tr><th>Metric</th><th class="tn">Q1 FY26</th><th class="tn">Q2 FY26</th><th class="tn">Q3 FY26</th><th class="tn">Q4 FY26 ★</th><th class="tn">Q4 FY25</th><th class="tn">YoY</th><th class="tn">QoQ</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="tb">Revenue from Operations</td><td class="tn">850</td><td class="tn">1,000</td><td class="tn">1,244</td><td class="tn tb">1,564</td><td class="tn">847</td><td class="tn tpos">▲ 85%</td><td class="tn tpos">▲ 26%</td></tr>
+        <tr><td class="tb">Transaction Charges</td><td class="tn">—</td><td class="tn">—</td><td class="tn">949</td><td class="tn tb">1,311</td><td class="tn">612</td><td class="tn tpos">▲ 114%</td><td class="tn tpos">▲ 38%</td></tr>
+        <tr><td class="tb">StAR MF Revenue</td><td class="tn">—</td><td class="tn">—</td><td class="tn">230</td><td class="tn tb">285</td><td class="tn">~230</td><td class="tn tpos">▲ 24%</td><td class="tn tpos">▲ 24%</td></tr>
+        <tr><td class="tb">Listing Services</td><td class="tn">—</td><td class="tn">—</td><td class="tn">157</td><td class="tn tb">119</td><td class="tn">125</td><td class="tn tneg">▼ 5%</td><td class="tn tneg">▼ 24%</td></tr>
+        <tr><td class="tb">Treasury Income</td><td class="tn">—</td><td class="tn">—</td><td class="tn">43</td><td class="tn tb">40</td><td class="tn">44</td><td class="tn tneg">▼ 9%</td><td class="tn tneg">▼ 6%</td></tr>
+        <tr><td class="tb">Total Expenses</td><td class="tn">—</td><td class="tn">—</td><td class="tn">511</td><td class="tn tb">557</td><td class="tn">392</td><td class="tn tneg">▲ 42%</td><td class="tn">▲ 9%</td></tr>
+        <tr style="background:var(--bse-soft);"><td class="tb" style="color:var(--bse);">Net Profit (PAT)</td><td class="tn tb">410</td><td class="tn tb">602</td><td class="tn tb">602</td><td class="tn tb" style="color:var(--bse);">797</td><td class="tn tb">494</td><td class="tn tpos">▲ 61%</td><td class="tn tpos">▲ 32%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-label" style="color:var(--mcx);">MCX India — Quarterly Financial Summary (₹ Crore) | Q4 FY26 results due 10 May 2026</div>
+    <table>
+      <thead>
+        <tr><th>Metric</th><th class="tn">Q1 FY26</th><th class="tn">Q2 FY26</th><th class="tn">Q3 FY26 ★</th><th class="tn">Q4 Est.</th><th class="tn">Q3 FY25</th><th class="tn">YoY (Q3)</th><th class="tn">QoQ (Q3)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="tb">Revenue from Operations</td><td class="tn">370</td><td class="tn">377</td><td class="tn tb">666</td><td class="tn neu">~285</td><td class="tn">301</td><td class="tn tpos">▲ 121%</td><td class="tn tpos">▲ 77%</td></tr>
+        <tr><td class="tb">Options Revenue</td><td class="tn">—</td><td class="tn">~120</td><td class="tn tb">380</td><td class="tn neu">Est.</td><td class="tn">~95</td><td class="tn tpos">▲ 300%+</td><td class="tn tpos">▲ 217%</td></tr>
+        <tr><td class="tb">Futures Revenue</td><td class="tn">—</td><td class="tn">~195</td><td class="tn tb">227</td><td class="tn neu">Est.</td><td class="tn">~160</td><td class="tn tpos">▲ 42%</td><td class="tn tpos">▲ 16%</td></tr>
+        <tr><td class="tb">Float / Treasury</td><td class="tn">—</td><td class="tn">~40</td><td class="tn tb">45</td><td class="tn neu">~45</td><td class="tn">~35</td><td class="tn tpos">▲ 29%</td><td class="tn tpos">▲ 13%</td></tr>
+        <tr><td class="tb">EBITDA</td><td class="tn">~240</td><td class="tn">~245</td><td class="tn tb">527</td><td class="tn neu">Est.</td><td class="tn">216</td><td class="tn tpos">▲ 144%</td><td class="tn tpos">▲ 115%</td></tr>
+        <tr><td class="tb">EBITDA Margin</td><td class="tn">~65%</td><td class="tn">~65%</td><td class="tn tb">76%</td><td class="tn neu">55–65%?</td><td class="tn">67%</td><td class="tn tpos">▲ 9pp</td><td class="tn">—</td></tr>
+        <tr style="background:var(--mcx-soft);"><td class="tb" style="color:var(--mcx);">Net Profit (PAT)</td><td class="tn tb">128</td><td class="tn tb">197</td><td class="tn tb" style="color:var(--mcx);">401</td><td class="tn" style="color:var(--muted);">~88–118</td><td class="tn tb">160</td><td class="tn tpos">▲ 151%</td><td class="tn tpos">▲ 103%</td></tr>
+        <tr><td class="tb">ADT F&amp;O (₹ L.Cr)</td><td class="tn">~2.5</td><td class="tn">~2.9</td><td class="tn tb">7.5</td><td class="tn neu">~3.5</td><td class="tn">2.32</td><td class="tn tpos">▲ 224%</td><td class="tn tpos">▲ 159%</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:10.5px;color:var(--muted);">★ Latest actual quarter. Q4 est. are analyst consensus estimates — actual results due 10 May 2026.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 3 · NET PROFIT ══════════════════════ -->
+<div class="panel" id="tab-netprofit">
+  <div class="sec-heading">
+    <h2>Net Profit</h2>
+    <span class="sec-note">PAT trend, growth trajectory and year-on-year comparison</span>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-label" style="color:var(--bse);">BSE — Net Profit After Tax, Quarterly (₹ Crore)</div>
+      <svg viewBox="0 0 500 235" class="chart">
+        <line x1="70" y1="20" x2="490" y2="20" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="70" y1="65" x2="490" y2="65" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="70" y1="110" x2="490" y2="110" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="70" y1="155" x2="490" y2="155" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="70" y1="190" x2="490" y2="190" stroke="#c8bfb4" stroke-width="1.2"/>
+        <text x="62" y="23" class="cl" text-anchor="end">900</text>
+        <text x="62" y="68" class="cl" text-anchor="end">675</text>
+        <text x="62" y="113" class="cl" text-anchor="end">450</text>
+        <text x="62" y="158" class="cl" text-anchor="end">225</text>
+        <text x="62" y="193" class="cl" text-anchor="end">0</text>
+        <!-- PY Q1=187, Q2=350, Q3=281, Q4=494 (scale 900→170px) -->
+        <rect x="88" y="155" width="26" height="35" fill="var(--bse)" opacity="0.14" rx="2"/>
+        <rect x="188" y="124" width="26" height="66" fill="var(--bse)" opacity="0.14" rx="2"/>
+        <rect x="288" y="137" width="26" height="53" fill="var(--bse)" opacity="0.14" rx="2"/>
+        <rect x="388" y="97" width="26" height="93" fill="var(--bse)" opacity="0.14" rx="2"/>
+        <!-- FY26 Q1=410→h=77.4, Q2=602→h=113.7, Q3=602, Q4=797→h=150.4 -->
+        <rect x="118" y="113" width="40" height="77" fill="var(--bse)" opacity="0.42" rx="3"/>
+        <text x="138" y="108" class="cv" text-anchor="middle">₹410</text>
+        <text x="138" y="207" class="cl" text-anchor="middle">Q1 FY26</text>
+        <rect x="218" y="76" width="40" height="114" fill="var(--bse)" opacity="0.62" rx="3"/>
+        <text x="238" y="71" class="cv" text-anchor="middle">₹602</text>
+        <text x="238" y="207" class="cl" text-anchor="middle">Q2 FY26</text>
+        <rect x="318" y="76" width="40" height="114" fill="var(--bse)" opacity="0.8" rx="3"/>
+        <text x="338" y="71" class="cv" text-anchor="middle">₹602</text>
+        <text x="338" y="207" class="cl" text-anchor="middle">Q3 FY26</text>
+        <rect x="418" y="40" width="40" height="150" fill="var(--bse)" rx="3"/>
+        <text x="438" y="35" class="cv" text-anchor="middle" font-weight="700">₹797</text>
+        <text x="438" y="207" class="cl" text-anchor="middle" font-weight="700">Q4 FY26 ★</text>
+        <polyline points="138,113 238,76 338,76 438,40" fill="none" stroke="var(--bse)" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.45"/>
+        <rect x="78" y="218" width="10" height="8" fill="var(--bse)" opacity="0.18" rx="1"/><text x="92" y="225" class="cl" font-size="9">FY25</text>
+        <rect x="140" y="218" width="10" height="8" fill="var(--bse)" rx="1"/><text x="154" y="225" class="cl" font-size="9">FY26</text>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--mcx);">MCX — Net Profit After Tax, Quarterly (₹ Crore) | Q4 Estimated</div>
+      <svg viewBox="0 0 500 235" class="chart">
+        <line x1="70" y1="20" x2="490" y2="20" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="70" y1="65" x2="490" y2="65" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="70" y1="110" x2="490" y2="110" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="70" y1="155" x2="490" y2="155" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="70" y1="190" x2="490" y2="190" stroke="#c8bfb4" stroke-width="1.2"/>
+        <text x="62" y="23" class="cl" text-anchor="end">450</text>
+        <text x="62" y="68" class="cl" text-anchor="end">338</text>
+        <text x="62" y="113" class="cl" text-anchor="end">225</text>
+        <text x="62" y="158" class="cl" text-anchor="end">113</text>
+        <text x="62" y="193" class="cl" text-anchor="end">0</text>
+        <!-- PY Q1=55,Q2=108,Q3=160,Q4=106 (scale 450→170px) -->
+        <rect x="88" y="169" width="26" height="21" fill="var(--mcx)" opacity="0.14" rx="2"/>
+        <rect x="188" y="149" width="26" height="41" fill="var(--mcx)" opacity="0.14" rx="2"/>
+        <rect x="288" y="130" width="26" height="60" fill="var(--mcx)" opacity="0.14" rx="2"/>
+        <rect x="388" y="150" width="26" height="40" fill="var(--mcx)" opacity="0.14" rx="2"/>
+        <!-- FY26: Q1=128→h=48.4, Q2=197→h=74.5, Q3=401→h=151.5, Q4~103→h=38.9 -->
+        <rect x="118" y="142" width="40" height="48" fill="var(--mcx)" opacity="0.38" rx="3"/>
+        <text x="138" y="137" class="cv" text-anchor="middle">₹128</text>
+        <text x="138" y="207" class="cl" text-anchor="middle">Q1 FY26</text>
+        <rect x="218" y="116" width="40" height="74" fill="var(--mcx)" opacity="0.58" rx="3"/>
+        <text x="238" y="111" class="cv" text-anchor="middle">₹197</text>
+        <text x="238" y="207" class="cl" text-anchor="middle">Q2 FY26</text>
+        <rect x="318" y="39" width="40" height="151" fill="var(--mcx)" rx="3"/>
+        <text x="338" y="34" class="cv" text-anchor="middle" font-weight="700">₹401 ★</text>
+        <text x="338" y="207" class="cl" text-anchor="middle" font-weight="700">Q3 FY26</text>
+        <rect x="418" y="151" width="40" height="39" fill="var(--mcx)" opacity="0.15" rx="3"/>
+        <rect x="418" y="151" width="40" height="39" fill="none" stroke="var(--mcx)" stroke-width="1.8" stroke-dasharray="5,3" rx="3"/>
+        <text x="438" y="146" class="cv" text-anchor="middle">~₹103</text>
+        <text x="438" y="207" class="cl" text-anchor="middle">Q4 Est. ⟳</text>
+        <polyline points="138,142 238,116 338,39" fill="none" stroke="var(--mcx)" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.45"/>
+        <rect x="78" y="218" width="10" height="8" fill="var(--mcx)" opacity="0.18" rx="1"/><text x="92" y="225" class="cl" font-size="9">FY25</text>
+        <rect x="140" y="218" width="10" height="8" fill="var(--mcx)" rx="1"/><text x="154" y="225" class="cl" font-size="9">FY26</text>
+      </svg>
+    </div>
+  </div>
+  <div class="card gap-top">
+    <div class="card-label">PAT Growth Summary — Full Year Comparison</div>
+    <table>
+      <thead>
+        <tr><th>Company</th><th class="tn">Q1 FY26</th><th class="tn">Q2 FY26</th><th class="tn">Q3 FY26</th><th class="tn">Q4 FY26</th><th class="tn">FY26 Full Year</th><th class="tn">FY25 Full Year</th><th class="tn">YoY Growth</th></tr>
+      </thead>
+      <tbody>
+        <tr style="background:var(--bse-soft);">
+          <td class="tb" style="color:var(--bse);">BSE Limited</td>
+          <td class="tn">₹410 Cr</td><td class="tn">₹602 Cr</td><td class="tn">₹602 Cr</td>
+          <td class="tn tb">₹797 Cr</td><td class="tn tb">₹2,487 Cr</td><td class="tn">₹1,322 Cr</td>
+          <td class="tn tpos">▲ 88%</td>
+        </tr>
+        <tr style="background:var(--mcx-soft);">
+          <td class="tb" style="color:var(--mcx);">MCX India</td>
+          <td class="tn">₹128 Cr</td><td class="tn">₹197 Cr</td><td class="tn tb">₹401 Cr</td>
+          <td class="tn" style="color:var(--muted);">~₹103 Cr est.</td>
+          <td class="tn" style="color:var(--muted);">~₹829 Cr est.</td>
+          <td class="tn">₹565 Cr</td>
+          <td class="tn tpos">▲ ~47%</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:10.5px;color:var(--muted);">BSE FY26 figures are audited (S.R. Batliboi &amp; Co. LLP, unmodified opinion). MCX Q4 FY26 actuals due 10 May 2026.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 4 · REVENUE SEGMENTS ══════════════════════ -->
+<div class="panel" id="tab-segments">
+  <div class="sec-heading">
+    <h2>Revenue Segments</h2>
+    <span class="sec-note">Business line breakdown and revenue composition</span>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-label" style="color:var(--bse);">BSE Limited — Revenue Segment Detail, Q4 FY26</div>
+      <table>
+        <thead><tr><th>Segment</th><th class="tn">Q4 FY26</th><th class="tn">Q4 FY25</th><th class="tn">YoY</th><th class="tn">Q3 FY26</th><th class="tn">QoQ</th></tr></thead>
+        <tbody>
+          <tr><td class="tb">Transaction Charges</td><td class="tn tb">₹1,311 Cr</td><td class="tn">₹612 Cr</td><td class="tn tpos">▲ 114%</td><td class="tn">₹949 Cr</td><td class="tn tpos">▲ 38%</td></tr>
+          <tr><td class="tb">StAR MF (Mutual Funds)</td><td class="tn tb">₹285 Cr</td><td class="tn">₹230 Cr</td><td class="tn tpos">▲ 24%</td><td class="tn">₹230 Cr</td><td class="tn tpos">▲ 24%</td></tr>
+          <tr><td class="tb">Listing Services</td><td class="tn tb">₹119 Cr</td><td class="tn">₹125 Cr</td><td class="tn tneg">▼ 5%</td><td class="tn">₹157 Cr</td><td class="tn tneg">▼ 24%</td></tr>
+          <tr><td class="tb">Treasury Income</td><td class="tn tb">₹40 Cr</td><td class="tn">₹44 Cr</td><td class="tn tneg">▼ 9%</td><td class="tn">₹43 Cr</td><td class="tn tneg">▼ 6%</td></tr>
+          <tr><td class="tb">Other / Ancillary</td><td class="tn tb">~₹109 Cr</td><td class="tn">—</td><td class="tn neu">Mixed</td><td class="tn">—</td><td class="tn">—</td></tr>
+          <tr style="background:var(--bse-soft);"><td class="tb" style="color:var(--bse);">Total Revenue</td><td class="tn tb" style="color:var(--bse);">₹1,564 Cr</td><td class="tn tb">₹847 Cr</td><td class="tn tpos">▲ 85%</td><td class="tn tb">₹1,244 Cr</td><td class="tn tpos">▲ 26%</td></tr>
+        </tbody>
+      </table>
+      <div class="seg-bar-wrap">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-weight:600;">Q4 FY26 Revenue Mix</div>
+        <div class="seg-bar">
+          <div style="flex:84;background:var(--bse);">84%</div>
+          <div style="flex:18;background:var(--bse-mid);">18%</div>
+          <div style="flex:8;background:#d8a090;">8%</div>
+          <div style="flex:3;background:#e8c8b8;"></div>
+        </div>
+        <div class="seg-label-row">
+          <span class="seg-dot"><span style="background:var(--bse);"></span>Transaction Charges 84%</span>
+          <span class="seg-dot"><span style="background:var(--bse-mid);"></span>StAR MF 18%</span>
+          <span class="seg-dot"><span style="background:#d8a090;"></span>Listing 8%</span>
+          <span class="seg-dot"><span style="background:#e8c8b8;"></span>Other</span>
+        </div>
+        <div style="margin-top:8px;font-size:10.5px;color:var(--neg);">⚠ Transaction charges at 84% — primary regulatory risk concentration</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--mcx);">MCX India — Revenue Segment Detail, Q3 FY26 (Latest Actual)</div>
+      <table>
+        <thead><tr><th>Segment</th><th class="tn">Q3 FY26</th><th class="tn">Q3 FY25</th><th class="tn">YoY</th><th class="tn">Q2 FY26</th><th class="tn">Revenue Mix</th></tr></thead>
+        <tbody>
+          <tr><td class="tb">Commodity Options</td><td class="tn tb">₹380 Cr</td><td class="tn">~₹95 Cr</td><td class="tn tpos">▲ 300%+</td><td class="tn">~₹120 Cr</td><td class="tn">57%</td></tr>
+          <tr><td class="tb">Commodity Futures</td><td class="tn tb">₹227 Cr</td><td class="tn">~₹160 Cr</td><td class="tn tpos">▲ 42%</td><td class="tn">~₹195 Cr</td><td class="tn">34%</td></tr>
+          <tr><td class="tb">Float / Treasury</td><td class="tn tb">₹45 Cr</td><td class="tn">~₹35 Cr</td><td class="tn tpos">▲ 29%</td><td class="tn">~₹40 Cr</td><td class="tn">7%</td></tr>
+          <tr><td class="tb">Data / Membership / Other</td><td class="tn tb">₹14 Cr</td><td class="tn">~₹11 Cr</td><td class="tn tpos">▲ 27%</td><td class="tn">~₹22 Cr</td><td class="tn">2%</td></tr>
+          <tr style="background:var(--mcx-soft);"><td class="tb" style="color:var(--mcx);">Total Revenue</td><td class="tn tb" style="color:var(--mcx);">₹666 Cr</td><td class="tn tb">₹301 Cr</td><td class="tn tpos">▲ 121%</td><td class="tn tb">₹377 Cr</td><td class="tn tb">100%</td></tr>
+        </tbody>
+      </table>
+      <div class="seg-bar-wrap">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:6px;font-weight:600;">Q3 FY26 Revenue Mix</div>
+        <div class="seg-bar">
+          <div style="flex:57;background:var(--mcx);">Options 57%</div>
+          <div style="flex:34;background:var(--mcx-mid);">Futures 34%</div>
+          <div style="flex:7;background:#a0d4b8;"></div>
+          <div style="flex:2;background:#c8e8d4;"></div>
+        </div>
+        <div class="seg-label-row">
+          <span class="seg-dot"><span style="background:var(--mcx);"></span>Commodity Options 57%</span>
+          <span class="seg-dot"><span style="background:var(--mcx-mid);"></span>Futures 34%</span>
+          <span class="seg-dot"><span style="background:#a0d4b8;"></span>Float 7%</span>
+          <span class="seg-dot"><span style="background:#c8e8d4;"></span>Data &amp; Other 2%</span>
+        </div>
+        <div style="margin-top:8px;font-size:10.5px;color:var(--neg);">⚠ Bullion (gold/silver) drives ~70% of options volumes — concentration risk</div>
+      </div>
+    </div>
+  </div>
+  <div class="card gap-top" style="border-left:4px solid var(--bse);">
+    <div class="card-label" style="color:var(--bse);">BSE StAR MF Platform Metrics</div>
+    <div class="g4">
+      <div style="text-align:center;padding:12px 0;"><div style="font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--bse);">83,000+</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Active Distributors</div></div>
+      <div style="text-align:center;padding:12px 0;"><div style="font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--bse);">28.1 Cr</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Registered Investors</div></div>
+      <div style="text-align:center;padding:12px 0;"><div style="font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--bse);">15,000+</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Schemes · 721 Cities</div></div>
+      <div style="text-align:center;padding:12px 0;"><div style="font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--bse);">7 Cr+</div><div style="font-size:11px;color:var(--muted);margin-top:4px;">Monthly Transactions</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;">MoU with India Post (3 yr, Dec 2025–Dec 2028) for Tier-2/3 reach across 1.5 lakh post offices. StAR NPS (pension) launched in FY26 as new vertical.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 5 · CHARTS ══════════════════════ -->
+<div class="panel" id="tab-charts">
+  <div class="sec-heading">
+    <h2>Charts</h2>
+    <span class="sec-note">Revenue, PAT and ADT visual comparisons — quarterly</span>
+  </div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-label" style="color:var(--bse);">BSE — Revenue from Operations (₹ Crore)</div>
+      <svg viewBox="0 0 460 230" class="chart">
+        <line x1="55" y1="20" x2="450" y2="20" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="55" y1="62" x2="450" y2="62" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="55" y1="104" x2="450" y2="104" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="55" y1="146" x2="450" y2="146" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="55" y1="185" x2="450" y2="185" stroke="#c8bfb4" stroke-width="1.2"/>
+        <text x="48" y="23" class="cl" text-anchor="end">1,600</text>
+        <text x="48" y="65" class="cl" text-anchor="end">1,200</text>
+        <text x="48" y="107" class="cl" text-anchor="end">800</text>
+        <text x="48" y="149" class="cl" text-anchor="end">400</text>
+        <text x="48" y="188" class="cl" text-anchor="end">0</text>
+        <!-- PY bars: Q1=375,Q2=480,Q3=495,Q4=847 (max 1700→165px) -->
+        <rect x="68" y="149" width="26" height="36" fill="var(--bse)" opacity="0.14" rx="2"/>
+        <rect x="168" y="138" width="26" height="47" fill="var(--bse)" opacity="0.14" rx="2"/>
+        <rect x="268" y="137" width="26" height="48" fill="var(--bse)" opacity="0.14" rx="2"/>
+        <rect x="368" y="103" width="26" height="82" fill="var(--bse)" opacity="0.14" rx="2"/>
+        <!-- FY26: Q1=850→h=82.4, Q2=1000→h=97, Q3=1244→h=120.6, Q4=1564→h=151.6 -->
+        <rect x="97" y="103" width="44" height="82" fill="var(--bse)" opacity="0.42" rx="3"/>
+        <text x="119" y="98" class="cv" text-anchor="middle">₹850</text>
+        <text x="119" y="202" class="cl" text-anchor="middle">Q1 FY26</text>
+        <rect x="197" y="88" width="44" height="97" fill="var(--bse)" opacity="0.58" rx="3"/>
+        <text x="219" y="83" class="cv" text-anchor="middle">₹1,000</text>
+        <text x="219" y="202" class="cl" text-anchor="middle">Q2 FY26</text>
+        <rect x="297" y="64" width="44" height="121" fill="var(--bse)" opacity="0.8" rx="3"/>
+        <text x="319" y="59" class="cv" text-anchor="middle">₹1,244</text>
+        <text x="319" y="202" class="cl" text-anchor="middle">Q3 FY26</text>
+        <rect x="397" y="33" width="44" height="152" fill="var(--bse)" rx="3"/>
+        <text x="419" y="28" class="cv" text-anchor="middle" font-weight="700">₹1,564</text>
+        <text x="419" y="202" class="cl" text-anchor="middle" font-weight="700">Q4 FY26 ★</text>
+        <rect x="58" y="215" width="10" height="8" fill="var(--bse)" opacity="0.18" rx="1"/><text x="72" y="222" class="cl" font-size="9">FY25</text>
+        <rect x="110" y="215" width="10" height="8" fill="var(--bse)" rx="1"/><text x="124" y="222" class="cl" font-size="9">FY26</text>
+      </svg>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--mcx);">MCX — Revenue from Operations (₹ Crore) | Q4 Estimated</div>
+      <svg viewBox="0 0 460 230" class="chart">
+        <line x1="55" y1="20" x2="450" y2="20" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="55" y1="62" x2="450" y2="62" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="55" y1="104" x2="450" y2="104" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="55" y1="146" x2="450" y2="146" stroke="#ede9e0" stroke-width="0.8"/>
+        <line x1="55" y1="185" x2="450" y2="185" stroke="#c8bfb4" stroke-width="1.2"/>
+        <text x="48" y="23" class="cl" text-anchor="end">700</text>
+        <text x="48" y="65" class="cl" text-anchor="end">525</text>
+        <text x="48" y="107" class="cl" text-anchor="end">350</text>
+        <text x="48" y="149" class="cl" text-anchor="end">175</text>
+        <text x="48" y="188" class="cl" text-anchor="end">0</text>
+        <!-- PY: Q1=163,Q2=220,Q3=301,Q4=237 (max 700→165px) -->
+        <rect x="68" y="147" width="26" height="38" fill="var(--mcx)" opacity="0.14" rx="2"/>
+        <rect x="168" y="133" width="26" height="52" fill="var(--mcx)" opacity="0.14" rx="2"/>
+        <rect x="268" y="114" width="26" height="71" fill="var(--mcx)" opacity="0.14" rx="2"/>
+        <rect x="368" y="129" width="26" height="56" fill="var(--mcx)" opacity="0.14" rx="2"/>
+        <!-- FY26: Q1=370→h=87.2, Q2=377→h=88.9, Q3=666→h=156.9, Q4=285→h=67.2 -->
+        <rect x="97" y="98" width="44" height="87" fill="var(--mcx)" opacity="0.38" rx="3"/>
+        <text x="119" y="93" class="cv" text-anchor="middle">₹370</text>
+        <text x="119" y="202" class="cl" text-anchor="middle">Q1 FY26</text>
+        <rect x="197" y="96" width="44" height="89" fill="var(--mcx)" opacity="0.58" rx="3"/>
+        <text x="219" y="91" class="cv" text-anchor="middle">₹377</text>
+        <text x="219" y="202" class="cl" text-anchor="middle">Q2 FY26</text>
+        <rect x="297" y="28" width="44" height="157" fill="var(--mcx)" rx="3"/>
+        <text x="319" y="23" class="cv" text-anchor="middle" font-weight="700">₹666 ★</text>
+        <text x="319" y="202" class="cl" text-anchor="middle" font-weight="700">Q3 FY26</text>
+        <rect x="397" y="118" width="44" height="67" fill="var(--mcx)" opacity="0.15" rx="3"/>
+        <rect x="397" y="118" width="44" height="67" fill="none" stroke="var(--mcx)" stroke-width="2" stroke-dasharray="5,3" rx="3"/>
+        <text x="419" y="113" class="cv" text-anchor="middle">~₹285</text>
+        <text x="419" y="202" class="cl" text-anchor="middle">Q4 Est. ⟳</text>
+        <rect x="58" y="215" width="10" height="8" fill="var(--mcx)" opacity="0.18" rx="1"/><text x="72" y="222" class="cl" font-size="9">FY25</text>
+        <rect x="110" y="215" width="10" height="8" fill="var(--mcx)" rx="1"/><text x="124" y="222" class="cl" font-size="9">FY26</text>
+      </svg>
+    </div>
+  </div>
+  <div class="card gap-top">
+    <div class="card-label" style="color:var(--mcx);">MCX — Average Daily Turnover F&amp;O, Quarterly (₹ Lakh Crore) — The Volume Story</div>
+    <svg viewBox="0 0 900 205" class="chart">
+      <line x1="80" y1="20" x2="880" y2="20" stroke="#ede9e0" stroke-width="0.8"/>
+      <line x1="80" y1="62" x2="880" y2="62" stroke="#ede9e0" stroke-width="0.8"/>
+      <line x1="80" y1="104" x2="880" y2="104" stroke="#ede9e0" stroke-width="0.8"/>
+      <line x1="80" y1="146" x2="880" y2="146" stroke="#ede9e0" stroke-width="0.8"/>
+      <line x1="80" y1="182" x2="880" y2="182" stroke="#c8bfb4" stroke-width="1.2"/>
+      <text x="72" y="23" class="cl" text-anchor="end">8.0L</text>
+      <text x="72" y="65" class="cl" text-anchor="end">6.0L</text>
+      <text x="72" y="107" class="cl" text-anchor="end">4.0L</text>
+      <text x="72" y="149" class="cl" text-anchor="end">2.0L</text>
+      <text x="72" y="185" class="cl" text-anchor="end">0</text>
+      <!-- PY: Q1=0.98,Q2=1.20,Q3=2.32,Q4=1.80 (max 8→162px) -->
+      <rect x="112" y="162" width="42" height="20" fill="var(--mcx)" opacity="0.12" rx="2"/>
+      <rect x="312" y="158" width="42" height="24" fill="var(--mcx)" opacity="0.12" rx="2"/>
+      <rect x="512" y="135" width="42" height="47" fill="var(--mcx)" opacity="0.12" rx="2"/>
+      <rect x="712" y="145" width="42" height="37" fill="var(--mcx)" opacity="0.12" rx="2"/>
+      <!-- FY26: Q1=2.5→h=50.6, Q2=2.9→h=58.7, Q3=7.5→h=152, Q4=3.5→h=71 -->
+      <rect x="158" y="132" width="60" height="50" fill="var(--mcx)" opacity="0.38" rx="3"/>
+      <text x="188" y="127" class="cv" text-anchor="middle">₹2.5L Cr</text>
+      <text x="188" y="197" class="cl" text-anchor="middle">Q1 FY26</text>
+      <rect x="358" y="123" width="60" height="59" fill="var(--mcx)" opacity="0.55" rx="3"/>
+      <text x="388" y="118" class="cv" text-anchor="middle">₹2.9L Cr</text>
+      <text x="388" y="197" class="cl" text-anchor="middle">Q2 FY26</text>
+      <rect x="558" y="30" width="60" height="152" fill="var(--mcx)" rx="3"/>
+      <text x="588" y="25" class="cv" text-anchor="middle" font-weight="700">₹7.5L Cr ★</text>
+      <text x="588" y="197" class="cl" text-anchor="middle" font-weight="700">Q3 FY26 (+224%)</text>
+      <rect x="758" y="111" width="60" height="71" fill="var(--mcx)" opacity="0.15" rx="3"/>
+      <rect x="758" y="111" width="60" height="71" fill="none" stroke="var(--mcx)" stroke-width="2" stroke-dasharray="5,3" rx="3"/>
+      <text x="788" y="106" class="cv" text-anchor="middle">~₹3.5L Cr</text>
+      <text x="788" y="197" class="cl" text-anchor="middle">Q4 Est. ⟳</text>
+      <text x="480" y="14" class="ct" text-anchor="middle" fill="var(--mcx)" font-size="10">224% YoY ADT surge in Q3 FY26 — the engine behind MCX's 76% EBITDA margin</text>
+    </svg>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 6 · ANNUAL PERFORMANCE ══════════════════════ -->
+<div class="panel" id="tab-annual">
+  <div class="sec-heading">
+    <h2>Annual Performance</h2>
+    <span class="sec-note">FY24 → FY25 → FY26 multi-year growth trajectory</span>
+  </div>
+  <div class="card">
+    <div class="card-label">Revenue &amp; Net Profit — Annual Comparison (₹ Crore)</div>
+    <svg viewBox="0 0 900 245" class="chart">
+      <line x1="80" y1="20" x2="880" y2="20" stroke="#ede9e0" stroke-width="0.8"/>
+      <line x1="80" y1="63" x2="880" y2="63" stroke="#ede9e0" stroke-width="0.8"/>
+      <line x1="80" y1="106" x2="880" y2="106" stroke="#ede9e0" stroke-width="0.8"/>
+      <line x1="80" y1="149" x2="880" y2="149" stroke="#ede9e0" stroke-width="0.8"/>
+      <line x1="80" y1="190" x2="880" y2="190" stroke="#c8bfb4" stroke-width="1.2"/>
+      <text x="72" y="23" class="cl" text-anchor="end">5,500</text>
+      <text x="72" y="66" class="cl" text-anchor="end">4,125</text>
+      <text x="72" y="109" class="cl" text-anchor="end">2,750</text>
+      <text x="72" y="152" class="cl" text-anchor="end">1,375</text>
+      <text x="72" y="193" class="cl" text-anchor="end">0</text>
+      <!-- FY24 group: BSE Rev=920→h=29.2, BSE PAT=422→h=13.4, MCX Rev=495→h=15.7, MCX PAT=180→h=5.7 -->
+      <rect x="110" y="161" width="46" height="29" fill="var(--bse)" opacity="0.28" rx="3"/>
+      <text x="133" y="157" class="cv" text-anchor="middle">₹920</text>
+      <rect x="160" y="177" width="46" height="13" fill="var(--bse)" opacity="0.2" rx="3"/>
+      <text x="183" y="173" class="cv" text-anchor="middle">₹422</text>
+      <rect x="210" y="174" width="46" height="16" fill="var(--mcx)" opacity="0.28" rx="3"/>
+      <text x="233" y="170" class="cv" text-anchor="middle">₹495</text>
+      <rect x="260" y="184" width="46" height="6" fill="var(--mcx)" opacity="0.2" rx="3"/>
+      <text x="283" y="180" class="cv" text-anchor="middle">₹180</text>
+      <text x="195" y="207" class="cl" text-anchor="middle">FY24</text>
+      <!-- FY25 group: BSE Rev=1800→h=57.1, BSE PAT=1322→h=41.9, MCX Rev=1100→h=34.9, MCX PAT=565→h=17.9 -->
+      <rect x="380" y="133" width="46" height="57" fill="var(--bse)" opacity="0.48" rx="3"/>
+      <text x="403" y="128" class="cv" text-anchor="middle">₹1,800</text>
+      <rect x="430" y="148" width="46" height="42" fill="var(--bse)" opacity="0.35" rx="3"/>
+      <text x="453" y="143" class="cv" text-anchor="middle">₹1,322</text>
+      <rect x="480" y="155" width="46" height="35" fill="var(--mcx)" opacity="0.48" rx="3"/>
+      <text x="503" y="150" class="cv" text-anchor="middle">₹1,100</text>
+      <rect x="530" y="172" width="46" height="18" fill="var(--mcx)" opacity="0.35" rx="3"/>
+      <text x="553" y="167" class="cv" text-anchor="middle">₹565</text>
+      <text x="465" y="207" class="cl" text-anchor="middle">FY25</text>
+      <!-- FY26 group: BSE Rev=5148→h=163.3, BSE PAT=2487→h=78.9, MCX Rev=1700→h=53.9, MCX PAT=829→h=26.3 (est) -->
+      <rect x="640" y="27" width="54" height="163" fill="var(--bse)" rx="3"/>
+      <text x="667" y="22" class="cv" text-anchor="middle" font-weight="700">₹5,148</text>
+      <rect x="698" y="111" width="54" height="79" fill="var(--bse)" opacity="0.65" rx="3"/>
+      <text x="725" y="106" class="cv" text-anchor="middle" font-weight="700">₹2,487</text>
+      <rect x="756" y="136" width="54" height="54" fill="var(--mcx)" opacity="0.72" rx="3"/>
+      <text x="783" y="131" class="cv" text-anchor="middle">~₹1,700e</text>
+      <rect x="814" y="164" width="54" height="26" fill="none" stroke="var(--mcx)" stroke-width="1.8" stroke-dasharray="5,3" rx="3"/>
+      <rect x="814" y="164" width="54" height="26" fill="var(--mcx)" opacity="0.15" rx="3"/>
+      <text x="841" y="159" class="cv" text-anchor="middle">~₹829e</text>
+      <text x="739" y="207" class="cl" text-anchor="middle">FY26 (BSE audited ★ · MCX estimated ⟳)</text>
+      <!-- Legend -->
+      <rect x="100" y="222" width="11" height="9" fill="var(--bse)" rx="1"/><text x="115" y="230" class="cl" font-size="9">BSE Revenue</text>
+      <rect x="200" y="222" width="11" height="9" fill="var(--bse)" opacity="0.55" rx="1"/><text x="215" y="230" class="cl" font-size="9">BSE PAT</text>
+      <rect x="290" y="222" width="11" height="9" fill="var(--mcx)" rx="1"/><text x="305" y="230" class="cl" font-size="9">MCX Revenue</text>
+      <rect x="390" y="222" width="11" height="9" fill="var(--mcx)" opacity="0.55" rx="1"/><text x="405" y="230" class="cl" font-size="9">MCX PAT</text>
+    </svg>
+  </div>
+  <div class="card gap-top">
+    <div class="card-label">Annual Financial Metrics — FY24 to FY26 (₹ Crore)</div>
+    <table>
+      <thead><tr><th>Company / Metric</th><th class="tn">FY24</th><th class="tn">FY25</th><th class="tn">FY26</th><th class="tn">FY25→26 Growth</th></tr></thead>
+      <tbody>
+        <tr style="background:var(--bse-soft);"><td class="tb" colspan="5" style="color:var(--bse);font-size:11px;padding:7px 11px;">BSE Limited (Audited)</td></tr>
+        <tr><td>Revenue from Operations</td><td class="tn">₹920</td><td class="tn">₹1,800</td><td class="tn tb">₹5,148</td><td class="tn tpos">▲ ~186%</td></tr>
+        <tr><td>Net Profit (PAT)</td><td class="tn">₹422</td><td class="tn">₹1,322</td><td class="tn tb">₹2,487</td><td class="tn tpos">▲ 88%</td></tr>
+        <tr><td>EBITDA &amp; Margin</td><td class="tn">—</td><td class="tn">—</td><td class="tn tb">₹3,393 Cr / 48%</td><td class="tn tpos">Expanding</td></tr>
+        <tr><td>Total Assets (Consolidated)</td><td class="tn">—</td><td class="tn">₹10,342</td><td class="tn tb">₹13,446</td><td class="tn tpos">▲ 30%</td></tr>
+        <tr><td>Total Equity</td><td class="tn">—</td><td class="tn">₹4,576</td><td class="tn tb">₹6,796</td><td class="tn tpos">▲ 49%</td></tr>
+        <tr><td>Operating Cash Flow</td><td class="tn">—</td><td class="tn">₹410</td><td class="tn tb">₹3,104</td><td class="tn tpos">▲ 657%</td></tr>
+        <tr style="background:var(--mcx-soft);"><td class="tb" colspan="5" style="color:var(--mcx);font-size:11px;padding:7px 11px;">MCX India (Q4 FY26 est. — results due 10 May)</td></tr>
+        <tr><td>Revenue from Operations</td><td class="tn">₹495</td><td class="tn">₹1,100</td><td class="tn" style="color:var(--muted);">~₹1,700 est.</td><td class="tn tpos">▲ ~55%</td></tr>
+        <tr><td>Net Profit (PAT)</td><td class="tn">₹180</td><td class="tn">₹565</td><td class="tn" style="color:var(--muted);">~₹829 est.</td><td class="tn tpos">▲ ~47%</td></tr>
+        <tr><td>EBITDA Margin</td><td class="tn">~55%</td><td class="tn">~62%</td><td class="tn" style="color:var(--muted);">~72% est.</td><td class="tn tpos">Expanding</td></tr>
+        <tr><td>9M FY26 PAT (Actual)</td><td class="tn" colspan="2">—</td><td class="tn tb">₹802 Cr (actual)</td><td class="tn tpos">▲ 89% YoY</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 7 · USPs & MOATS ══════════════════════ -->
+<div class="panel" id="tab-usps">
+  <div class="sec-heading">
+    <h2>USPs &amp; Competitive Moats</h2>
+    <span class="sec-note">What makes each exchange structurally defensible and uniquely positioned</span>
+  </div>
+  <div class="g2" style="margin-bottom:20px;">
+    <div class="card" style="border-top:4px solid var(--bse);">
+      <div class="card-label" style="color:var(--bse);">BSE Limited — Unique Selling Propositions</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--bse);margin-bottom:14px;">Asia's Oldest Exchange · 150-Year Brand Equity</div>
+      <div style="background:var(--bse-soft);border-left:3px solid var(--bse);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:5px;">🏛 Sensex Derivatives Comeback</div>
+        <div style="font-size:11px;color:var(--muted);">BSE revived Sensex &amp; Bankex index options with weekly/monthly expiries — a structural market share recovery from years of NSE dominance. Transaction charges surged 114% YoY to ₹1,311 Cr in Q4 FY26.</div>
+      </div>
+      <div style="background:var(--bse-soft);border-left:3px solid var(--bse);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:5px;">📊 StAR MF — India's MF Distribution Rail</div>
+        <div style="font-size:11px;color:var(--muted);">Largest exchange-based MF platform: 83,000+ distributors, 28 Cr investors, 7 Cr+ monthly transactions. India Post MoU extends reach to 1.5 lakh post offices in Tier-2/3 India. Highly scalable at near-zero marginal cost.</div>
+      </div>
+      <div style="background:var(--bse-soft);border-left:3px solid var(--bse);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:5px;">🏢 Listing Franchise &amp; SME Platform</div>
+        <div style="font-size:11px;color:var(--muted);">5,000+ listed companies vs NSE's ~2,200. BSE SME is India's most active SME exchange. Listing revenue is recurring and direction-independent. Social Stock Exchange adds regulatory goodwill.</div>
+      </div>
+      <div style="background:var(--bse-soft);border-left:3px solid var(--bse);border-radius:6px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:5px;">💡 Zero Debt + Strong Balance Sheet</div>
+        <div style="font-size:11px;color:var(--muted);">No debt. Operating cash flow surged 657% to ₹3,104 Cr in FY26. Total equity ₹6,796 Cr (+49% YoY). StAR NPS (pension distribution) launched in FY26 as an entirely new vertical.</div>
+      </div>
+    </div>
+    <div class="card" style="border-top:4px solid var(--mcx);">
+      <div class="card-label" style="color:var(--mcx);">MCX India — Unique Selling Propositions</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--mcx);margin-bottom:14px;">95%+ Market Share · Operating Leverage Champion</div>
+      <div style="background:var(--mcx-soft);border-left:3px solid var(--mcx);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:5px;">🥇 Unrivalled Commodity Market Position</div>
+        <div style="font-size:11px;color:var(--muted);">Over 95% market share in India's commodity derivatives. Near-monopoly creates price-setter advantage, high switching costs, and deep liquidity that self-reinforces. No credible competitor at scale.</div>
+      </div>
+      <div style="background:var(--mcx-soft);border-left:3px solid var(--mcx);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:5px;">⚡ Operating Leverage — Fixed Cost Flywheel</div>
+        <div style="font-size:11px;color:var(--muted);">Largely fixed cost base. When ADT doubles, EBITDA more than doubles. Q3 FY26: revenue +121% YoY, EBITDA +144%, margin hit 76%. Every ₹1 of incremental volume flows ~₹0.76 to EBITDA — extraordinary efficiency.</div>
+      </div>
+      <div style="background:var(--mcx-soft);border-left:3px solid var(--mcx);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:5px;">⛏ Coal Exchange — New Revenue Frontier</div>
+        <div style="font-size:11px;color:var(--muted);">SEBI approved MCX Coal Exchange Ltd (April 2026), ₹100 Cr investment, 100% MCX-owned initially. Coal is India's highest-volume commodity. If adoption mirrors bullion, this is a multi-year revenue multiplier.</div>
+      </div>
+      <div style="background:var(--mcx-soft);border-left:3px solid var(--mcx);border-radius:6px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:5px;">🌐 Global Alliance Network &amp; iCOMDEX</div>
+        <div style="font-size:11px;color:var(--muted);">Strategic alliances with CME Group, LME, Dalian, Zhengzhou, Jakarta — global price discovery linkage creates intellectual and liquidity moat. iCOMDEX real-time indices embedded in Indian commodity benchmarks.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-label">Shared Structural Tailwinds — Both Exchanges Benefit</div>
+    <div class="usp-grid">
+      <div class="usp-card">
+        <div class="usp-num">01</div>
+        <div class="usp-title">India's Financialisation Wave</div>
+        <div class="usp-body">Household savings shifting from gold/real estate/FDs to financial assets. Demat accounts at 18 Cr+. SIP book at ₹26,000+ Cr/month. Every new financial participant is a new BSE or MCX volume unit — the addressable market grows automatically.</div>
+        <span class="usp-tag utag-both">Both Exchanges</span>
+      </div>
+      <div class="usp-card">
+        <div class="usp-num">02</div>
+        <div class="usp-title">Regulatory-Mandated Oligopoly</div>
+        <div class="usp-body">SEBI mandates exchange-based trading — no grey market alternative. This creates a structural oligopoly. BSE and NSE in equities; MCX in commodities. Network effects self-reinforce with each new market participant, making the moat wider every year.</div>
+        <span class="usp-tag utag-both">Both Exchanges</span>
+      </div>
+      <div class="usp-card">
+        <div class="usp-num">03</div>
+        <div class="usp-title">Technology as Competitive Infrastructure</div>
+        <div class="usp-body">Both invest heavily in latency, uptime, and product innovation. BSE's derivatives platform rebuild took years but now generates massive transaction revenue. MCX's options infrastructure is enabling BULLDEX and coal exchange products — impossible on legacy systems.</div>
+        <span class="usp-tag utag-both">Both Exchanges</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 8 · WHY GOOD PERFORMANCE ══════════════════════ -->
+<div class="panel" id="tab-whygood">
+  <div class="sec-heading">
+    <h2>Why Good Performance?</h2>
+    <span class="sec-note">Strong results despite weak macro, FII outflows &amp; poor broader market sentiment</span>
+  </div>
+  <div style="background:#181511;color:#fff;border-radius:14px;padding:20px 24px;margin-bottom:24px;">
+    <div style="font-family:'Playfair Display',serif;font-size:1.2rem;margin-bottom:8px;">The Counter-Intuitive Truth About Exchange Businesses</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.65);line-height:1.7;">Exchanges earn per transaction — not on direction. A falling market creates more urgency to hedge, speculate, and rebalance, all of which generate volumes and revenue. High volatility = high revenues. Bad macro = exchange boom. This is why BSE is up 50% YTD while the Nifty50 is down ~7% in 2026 and MCX has rallied 147% in one year.</div>
+  </div>
+  <div class="why-grid">
+    <div class="why-card">
+      <div class="why-num">01</div>
+      <div class="why-title">Volatility Drives Volume — Always</div>
+      <div class="why-body">US tariff shocks, India-Pakistan tensions, global geopolitical uncertainty — all drove record volumes in equity derivatives (BSE) and commodities (MCX). Fear and uncertainty are the exchange's best marketing. Both F&amp;O and commodity hedging surge in volatile environments.</div>
+      <span class="usp-tag utag-both" style="margin-top:10px;display:inline-block;">Both BSE &amp; MCX</span>
+    </div>
+    <div class="why-card">
+      <div class="why-num">02</div>
+      <div class="why-title">Gold at All-Time Highs → MCX Windfall</div>
+      <div class="why-body">Gold hit record highs globally in FY26 driven by safe-haven demand, USD weakness, and geopolitical hedging. MCX bullion ADT surged 224% YoY to ₹7.5 lakh crore. Fixed-cost model means every rupee of incremental gold volume flows disproportionately to profit — EBITDA hit 76%.</div>
+      <span class="usp-tag utag-mcx" style="margin-top:10px;display:inline-block;">MCX Specific</span>
+    </div>
+    <div class="why-card">
+      <div class="why-num">03</div>
+      <div class="why-title">BSE's Sensex Derivatives Comeback</div>
+      <div class="why-body">BSE structurally recovered in index derivatives after years of NSE dominance. Weekly and monthly expiry products drove massive retail options participation. Transaction charges grew 114% YoY. This is structural market share gain, not just cyclical volume pickup.</div>
+      <span class="usp-tag utag-bse" style="margin-top:10px;display:inline-block;">BSE Specific</span>
+    </div>
+    <div class="why-card">
+      <div class="why-num">04</div>
+      <div class="why-title">Retail Investor Explosion — SIPs Don't Stop</div>
+      <div class="why-body">India added crores of new retail investors even in the market downturn. BSE registered investor base hit 24.8 crore. SIPs continued — investors averaged down. Every BSE StAR MF SIP transaction earns BSE a fee regardless of market direction. This is the true market-direction-independent revenue engine.</div>
+      <span class="usp-tag utag-bse" style="margin-top:10px;display:inline-block;">BSE StAR MF</span>
+    </div>
+    <div class="why-card">
+      <div class="why-num">05</div>
+      <div class="why-title">Operating Leverage — Fixed Cost Superpower</div>
+      <div class="why-body">Both exchanges have fixed cost bases. When volumes double, costs barely move. BSE's expenses rose 42% while revenue rose 85%. MCX's EBITDA margin hit 76%. This asymmetry between revenue growth and cost growth is the engine of profitability regardless of market mood.</div>
+      <span class="usp-tag utag-both" style="margin-top:10px;display:inline-block;">Both BSE &amp; MCX</span>
+    </div>
+    <div class="why-card">
+      <div class="why-num">06</div>
+      <div class="why-title">India Capital Market Structural Expansion</div>
+      <div class="why-body">India's MF AUM crossed ₹65+ lakh crore in FY26. India Post MoU brings MF access to 1.5 lakh post offices. BSE StAR NPS, MCX BULLDEX, and coal exchange are expanding the addressable market structurally — independent of short-term market conditions or FII flows.</div>
+      <span class="usp-tag utag-both" style="margin-top:10px;display:inline-block;">Both BSE &amp; MCX</span>
+    </div>
+  </div>
+  <div class="card gap-top" style="border-left:4px solid var(--gold);">
+    <div class="card-label" style="color:var(--gold);">Key Risks to Watch</div>
+    <div class="g2">
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--bse);margin-bottom:8px;">BSE — Primary Risks</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7;">
+          ⚖️ <strong>SEBI Regulatory Action:</strong> Any tightening of equity derivatives rules (lot size hike, weekly expiry restrictions, margin increase) directly cuts transaction charges which are 84% of BSE's revenue.<br><br>
+          📉 <strong>Volume Cyclicality:</strong> In prolonged low-volatility or sustained bear markets, options trading can fall 40–50% sharply, hitting revenues hard.<br><br>
+          🏆 <strong>NSE Competition:</strong> BSE's derivatives recovery may face pushback from NSE with competing products or pricing, given NSE's superior liquidity advantage.
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--mcx);margin-bottom:8px;">MCX — Primary Risks</div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.7;">
+          🥇 <strong>Bullion Concentration:</strong> ~70% of options volumes are gold/silver. If global gold volatility subsides, ADT and margins will normalise sharply from Q3 FY26 peak levels.<br><br>
+          📊 <strong>Margin Sustainability:</strong> 76% EBITDA is exceptional — analysts see 55–65% as sustainable long term. Any normalisation hits P/E of 80x hard.<br><br>
+          ⚙️ <strong>Coal Exchange Capex:</strong> ₹100 Cr investment pressure on near-term margins; adoption timeline and PSU participation uncertain.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════ TAB 9 · SCORECARD ══════════════════════ -->
+<div class="panel" id="tab-scorecard">
+  <div class="sec-heading">
+    <h2>Scorecard</h2>
+    <span class="sec-note">BSE vs MCX — head-to-head across key financial and strategic parameters</span>
+  </div>
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:25%;">Parameter</th>
+          <th class="score-bse-hdr" style="width:31%;border-radius:4px 0 0 0;">BSE Limited</th>
+          <th class="score-mcx-hdr" style="width:31%;border-radius:0 4px 0 0;">MCX India</th>
+          <th style="width:13%;text-align:center;">Edge</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="tb">Business Type</td><td style="font-size:12px;">Multi-asset: equities, derivatives, MF distribution, listing, clearing, SME, NPS</td><td style="font-size:12px;">Commodity derivatives: futures &amp; options — bullion, metals, energy, agri</td><td class="edge-bse">BSE (diversified)</td></tr>
+        <tr><td class="tb">Latest Q Revenue Growth</td><td class="tn tpos">▲ 85% YoY (Q4 FY26)</td><td class="tn tpos">▲ 121% YoY (Q3 FY26)</td><td class="edge-mcx">MCX</td></tr>
+        <tr><td class="tb">Latest Q PAT Growth</td><td class="tn tpos">▲ 61% YoY (₹797 Cr)</td><td class="tn tpos">▲ 151% YoY (₹401 Cr)</td><td class="edge-mcx">MCX</td></tr>
+        <tr><td class="tb">EBITDA Margin</td><td class="tn">48% (FY26 full year)</td><td class="tn">76% (Q3 FY26)</td><td class="edge-mcx">MCX</td></tr>
+        <tr><td class="tb">FY26 Annual PAT</td><td class="tn tb">₹2,487 Cr (audited)</td><td class="tn" style="color:var(--muted);">~₹829 Cr (estimated)</td><td class="edge-bse">BSE (absolute)</td></tr>
+        <tr><td class="tb">Market Cap</td><td class="tn">₹1,61,437 Cr</td><td class="tn">~₹15,250 Cr</td><td class="edge-bse">BSE (scale)</td></tr>
+        <tr><td class="tb">P/E Ratio (approx.)</td><td class="tn">~65x</td><td class="tn">~80x (TTM even higher)</td><td class="edge-bse">BSE (lower multiple)</td></tr>
+        <tr><td class="tb">Stock Return</td><td class="tn tpos">+50% YTD 2026</td><td class="tn tpos">+36% YTD / +147% 1yr</td><td class="edge-mcx">MCX (1-year)</td></tr>
+        <tr><td class="tb">Market Share (Primary)</td><td style="font-size:12px;">Equity derivatives — growing; Cash — smaller vs NSE</td><td class="tn">95%+ commodity derivatives</td><td class="edge-mcx">MCX (dominance)</td></tr>
+        <tr><td class="tb">Revenue Concentration Risk</td><td class="tn tneg">84% transaction charges</td><td class="tn tneg">~70% bullion options</td><td class="edge-tie">Both risky</td></tr>
+        <tr><td class="tb">Registered Investors</td><td class="tn">24.8 crore (equity)</td><td class="tn">Growing; FPI now active</td><td class="edge-bse">BSE (scale)</td></tr>
+        <tr><td class="tb">New Growth Verticals</td><td style="font-size:12px;">StAR MF, StAR NPS, SME, Social Stock Exchange</td><td style="font-size:12px;">Coal Exchange (SEBI approved), BULLDEX options</td><td class="edge-tie">Both strong</td></tr>
+        <tr><td class="tb">Debt Position</td><td class="tn tpos">Zero debt</td><td class="tn tpos">Minimal debt</td><td class="edge-tie">Both clean</td></tr>
+        <tr><td class="tb">Operating Cash Flow FY26</td><td class="tn tpos">₹3,104 Cr (▲657% YoY)</td><td class="tn tpos">Strong (9M PAT ₹802 Cr)</td><td class="edge-bse">BSE (absolute)</td></tr>
+        <tr><td class="tb">Global Alliances</td><td style="font-size:12px;">India Post, SEBI ecosystem, clearing partnerships</td><td style="font-size:12px;">CME Group, LME, Dalian, Zhengzhou, Jakarta</td><td class="edge-mcx">MCX (global reach)</td></tr>
+        <tr style="background:var(--gold-soft);"><td class="tb" style="color:var(--gold);">Character</td><td style="font-size:11px;">Quality compounder · Diversified revenue base · MF distribution moat · Safer, multi-engine business</td><td style="font-size:11px;">Higher risk-reward · Operating leverage extreme · Coal &amp; institutional entry are 2–3yr optionality plays</td><td style="text-align:center;font-size:16px;">⚖️</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div class="disclaimer">
+  All BSE Q4 FY26 figures are audited actuals declared 7 May 2026 · MCX Q3 FY26 are audited actuals · MCX Q4 FY26 results due 10 May 2026 · Q4 and FY26 MCX figures are estimates · Data from BSE/NSE exchange filings and investor presentations · For informational and research purposes only
+</div>
+<div class="wm">EIL Research · Elango Industries Limited · 08 May 2026</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
